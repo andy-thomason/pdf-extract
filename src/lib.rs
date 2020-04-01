@@ -2,14 +2,13 @@ extern crate lopdf;
 
 use lopdf::content::Content;
 use lopdf::*;
-use euclid::*;
+pub use euclid::{Transform2D, vec2};
 use std::fmt::{Debug, Formatter};
 extern crate encoding;
 extern crate euclid;
 extern crate adobe_cmap_parser;
 extern crate type1_encoding_parser;
 extern crate unicode_normalization;
-use euclid::vec2;
 use encoding::{Encoding, DecoderTrap};
 use encoding::all::UTF_16BE;
 use std::fmt;
@@ -710,7 +709,7 @@ impl<'a> PdfFont for PdfSimpleFont<'a> {
             return *width;
         } else {
             dlog!("missing width for {} falling back to default_width {:?}", id, self.font);
-            return self.default_width.unwrap();
+            return self.default_width.unwrap_or(0.);
         }
     }
     /*fn decode(&self, chars: &[u8]) -> String {
@@ -1285,7 +1284,8 @@ fn make_colorspace<'a>(doc: &'a Document, name: &[u8], resources: &'a Dictionary
             match cs_name.as_ref() {
                 "Separation" => {
                     let name = pdf_to_utf8(cs[1].as_name().expect("second arg must be a name"));
-                    let alternate_space = pdf_to_utf8(cs[2].as_name().expect("second arg must be a name"));
+                    let alternate_space = pdf_to_utf8(cs[2].as_name().unwrap_or(b""));
+                    //expect("second arg must be a name"));
                     let tint_transform = Box::new(Function::new(doc, maybe_deref(doc, &cs[3])));
 
                     dlog!("{:?} {:?} {:?}", name, alternate_space, tint_transform);
@@ -1710,7 +1710,7 @@ impl<'a> HTMLOutput<'a> {
     }
 }
 
-type ArtBox = (f64, f64, f64, f64);
+pub type ArtBox = (f64, f64, f64, f64);
 
 impl<'a> OutputDev for HTMLOutput<'a> {
     fn begin_page(&mut self, page_num: u32, media_box: &MediaBox, _: Option<ArtBox>) -> Result<(), OutputError> {
